@@ -50,7 +50,7 @@ void InitGame()
     hero.height = 180;
 
     hero.speed = 30;
-
+    //
     platform[0].x = 150;
     platform[0].width = 350;
     platform[0].y = 700;

@@ -49,7 +49,7 @@ void InitGame()
     hero.width = 90;
     hero.height = 180;
 
-    hero.speed = 30;
+    hero.speed = 10;
     //
     platform[0].x = 150;
     platform[0].width = 350;
@@ -92,7 +92,7 @@ void ProcessInput()
 
 void Gravity() {
     hero.y += gravity;
-    if (GetAsyncKeyState(VK_SPACE))hero.y -= 100;
+    if (GetAsyncKeyState(VK_SPACE))hero.y -= 30;
 }
 
 void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
@@ -147,13 +147,26 @@ void RoofAndFloorCheck()
     hero.y = min(hero.y,window.height - hero.height);
 }
 
-void CheckCollisions() 
+bool CC = false;
+
+void CheckCollisions()
 {
+    CC = false;
+
+    if (hero.x < platform[0].x + platform[0].width &&
+        hero.x + hero.width > platform[0].x &&
+        hero.y < platform[0].y + platform[0].height &&
+        hero.y + hero.height > platform[0].y)
+    {
+        CC = true;
+    }
+}
+
+void WorkCollisions() 
+{
+   
     float x1, x2, y1, y2, overx, overy, res;
-    if (hero.x >= platform[0].x - hero.width &&
-        hero.x <= platform[0].x + platform[0].width &&
-        hero.y >= platform[0].y - hero.height &&
-        hero.y <= platform[0].y + platform[0].height)
+    if (CC == true)
     {
         x1 = platform[0].x - hero.x + platform[0].width;
         x2 = hero.x + hero.width - platform[0].x;
@@ -184,9 +197,6 @@ void CheckCollisions()
         
     }
 }
-
-
-
 void ShowScore()
 {
     //поиграем шрифтами и цветами
@@ -204,21 +214,13 @@ void ShowScore()
     _itoa_s(hero.y, txt, 10);
     TextOutA(window.context, 10, 100, "Balls", 5);
     TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
-
-    _itoa_s(platform[0].x, txt, 10);
-    TextOutA(window.context, 10, 100, "Balls", 5);
-    TextOutA(window.context, 200, 190, (LPCSTR)txt, strlen(txt));
-
-    _itoa_s(platform[0].y, txt, 10);
-    TextOutA(window.context, 10, 100, "Balls", 5);
-    TextOutA(window.context, 200, 280, (LPCSTR)txt, strlen(txt));
 }
         //ProcessSound("bounce.wav"); platform[0].y >= hero.y
 void ProcessRoom()
 {
     RoofAndFloorCheck();
     CheckCollisions();
-    //WorkCollision();
+    WorkCollisions();
 }
 
 void InitWindow()

@@ -14,7 +14,7 @@ typedef struct {
     float x, y, width, height, rad, dx, dy, speed;
     int hp, atackPower, current_loc, maxHp,num;
     string name;
-    HBITMAP hBitmap;//хэндл к спрайту шарика 
+    HBITMAP hBitmap;//хэндл к спрайту
 } sprite;
 
 
@@ -173,29 +173,26 @@ void RoofAndFloorCheck()
 }
 
 
-void CheckCollisions()
+bool CheckCollisions(float firstx, float firsty, float firstw, float firsth,
+    float secondx, float secondy, float secondw, float secondh)
 {
-    CC = false;
-
-    if (hero.x < platform[0].x + platform[0].width &&
-        hero.x + hero.width > platform[0].x &&
-        hero.y < platform[0].y + platform[0].height &&
-        hero.y + hero.height > platform[0].y)
-    {
-        CC = true;
-    }
+    return (firstx < secondx + secondw &&
+        firstx + firstw > secondx &&
+        firsty < secondy + secondh &&
+        firsty + firsth > secondy);
 }
 
-void WorkCollisions() 
+void WorkCollisions(float& firstx, float& firsty, float& firstw, float& firsth, float& secondx, float& secondy, float& secondw, float& secondh)
 {
    
     float x1, x2, y1, y2, overx, overy, res;
-    if (CC == true)
+    if (CheckCollisions(firstx, firsty, firstw, firsth,
+        secondx, secondy, secondw, secondh))
     {
-        x1 = platform[0].x - hero.x + platform[0].width;
-        x2 = hero.x + hero.width - platform[0].x;
-        y1 = platform[0].y - hero.y + platform[0].height;
-        y2 = hero.y + hero.height - platform[0].y;
+        x1 = secondx - firstx + secondw;
+        x2 = firstx + firstw - secondx;
+        y1 = secondy - firsty + secondh;
+        y2 = firsty + firsth - secondy;
 
         overx = min(x1, x2);
         overy = min(y1, y2);
@@ -203,18 +200,18 @@ void WorkCollisions()
         res = min(overx, overy);
 
         if (res == x1) {
-            hero.x = platform[0].x + platform[0].width;
+            firstx = secondx + secondw;
 
         }
         else if (res == x2) {
-            hero.x = platform[0].x - hero.width;
+            firstx = secondx - firstw;
         }
         else if (res == y1) {
 
-            hero.y = platform[0].y + platform[0].height;
+            firsty = secondy + secondh;
         }
         else if (res == y2) {
-            hero.y = platform[0].y - hero.height;
+            firsty = secondy - firsth;
         }
     } 
     else {
@@ -243,8 +240,13 @@ void ShowScore()
 void ProcessRoom()
 {
     RoofAndFloorCheck();
-    CheckCollisions();
-    WorkCollisions();
+    for (int i = 0; i <= 4; i++) {
+        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+    }
+
+    /*CheckCollisions(hero.x, hero.y, hero.width, hero.height, platform[0].x, platform[0].y, platform[0].width, platform[0].height);
+    WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[0].x, platform[0].y, platform[0].width, platform[0].height);*/
+    
 }
 
 void InitWindow()

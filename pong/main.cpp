@@ -9,31 +9,75 @@
 
 using namespace std;
 
-// секция данных игры  
-typedef struct {
-    float x, y, width, height, rad, dx, dy, speed;
-    int hp, atackPower, current_loc, maxHp,num;
+struct sprite {
+    float x, y, width, height;
+    HBITMAP hBitmap;
+
+    sprite() : x(0), y(0), width(0), height(0), hBitmap(NULL) {}
+    sprite(float x, float y, float w, float h)
+        : x(x), y(y), width(w), height(h), hBitmap(NULL) {
+    }
+    ~sprite() { // деструктор
+
+    }
+};
+
+
+struct Platforms : sprite {
+    bool Solid;
+    float MoveX, MoveY;
+
+    Platforms(float x, float y, float w, float h, bool solid = true)
+        : sprite(x, y, w, h), Solid(solid), MoveX(0), MoveY(0) {
+    }
+};
+
+
+
+struct Character : sprite {
+    int hp, hp, atackPower, current_loc, maxHp;
     string name;
-    HBITMAP hBitmap;//хэндл к спрайту
-} sprite;
+};
+
+struct Hero : Character {
+
+};
+
+struct Enemy : Character {
+    float StartX, StartY;
+};
 
 
-sprite hero;//герой
-sprite enemy[2];
-sprite platform[5];
 
-struct {
-    HWND hWnd;//хэндл окна
-    HDC device_context, context;// два контекста устройства (для буферизации)
-    int width, height;//сюда сохраним размеры окна которое создаст программа
-} window;
+
+
+
+
+// секция данных игры  
+//typedef struct {
+//    float x, y, width, height, rad, dx, dy, speed;
+//    int hp, atackPower, current_loc, maxHp,num;
+//    string name;
+//    HBITMAP hBitmap;//хэндл к спрайту
+//} sprite;
+//
+//
+//sprite hero;//герой
+//sprite enemy[2];
+//sprite platform[5];
+//
+//struct {
+//    HWND hWnd;//хэндл окна
+//    HDC device_context, context;// два контекста устройства (для буферизации)
+//    int width, height;//сюда сохраним размеры окна которое создаст программа
+//} window;
 
 int gravity = 18;
 int all;
-bool CC = false;
 bool jump = false;
 
 HBITMAP hBack;// хэндл для фонового изображения
+
 
 //cекция кода
 
@@ -89,6 +133,7 @@ void InitGame()
 void ProcessSound(const char* name)
 {
     PlaySound(TEXT(name), NULL, SND_FILENAME | SND_ASYNC);
+        //ProcessSound("bounce.wav");
 }
 
 void ProcessInput()
@@ -96,18 +141,7 @@ void ProcessInput()
     if (GetAsyncKeyState(VK_LEFT)) hero.x -= hero.speed;
     if (GetAsyncKeyState(VK_RIGHT)) hero.x += hero.speed;
 }
-        //ProcessSound("bounce.wav");
 
-//void GravityAndJump() {
-//
-//    hero.y += gravity;
-//
-//    if (GetAsyncKeyState(VK_SPACE) && !jump)
-//    {
-//        jump = true;
-//        hero.y -= 110;
-//    }
-//}
 
 void GravityAndJump() {
 

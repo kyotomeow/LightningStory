@@ -9,68 +9,24 @@
 
 using namespace std;
 
-struct sprite {
-    float x, y, width, height;
-    HBITMAP hBitmap;
-
-    sprite() : x(0), y(0), width(0), height(0), hBitmap(NULL) {}
-    sprite(float x, float y, float w, float h)
-        : x(x), y(y), width(w), height(h), hBitmap(NULL) {
-    }
-    ~sprite() { // деструктор
-
-    }
-};
-
-
-struct Platforms : sprite {
-    bool Solid;
-    float MoveX, MoveY;
-
-    Platforms(float x, float y, float w, float h, bool solid = true)
-        : sprite(x, y, w, h), Solid(solid), MoveX(0), MoveY(0) {
-    }
-};
-
-
-
-struct Character : sprite {
-    int hp, hp, atackPower, current_loc, maxHp;
+ //секция данных игры  
+typedef struct {
+    float x, y, width, height, rad, dx, dy, speed;
+    int hp, atackPower, current_loc, maxHp,num;
     string name;
-};
-
-struct Hero : Character {
-
-};
-
-struct Enemy : Character {
-    float StartX, StartY;
-};
+    HBITMAP hBitmap;//хэндл к спрайту
+} sprite;
 
 
+sprite hero;//герой
+sprite enemy[2];
+sprite platform[5];
 
-
-
-
-
-// секция данных игры  
-//typedef struct {
-//    float x, y, width, height, rad, dx, dy, speed;
-//    int hp, atackPower, current_loc, maxHp,num;
-//    string name;
-//    HBITMAP hBitmap;//хэндл к спрайту
-//} sprite;
-//
-//
-//sprite hero;//герой
-//sprite enemy[2];
-//sprite platform[5];
-//
-//struct {
-//    HWND hWnd;//хэндл окна
-//    HDC device_context, context;// два контекста устройства (для буферизации)
-//    int width, height;//сюда сохраним размеры окна которое создаст программа
-//} window;
+struct {
+    HWND hWnd;//хэндл окна
+    HDC device_context, context;// два контекста устройства (для буферизации)
+    int width, height;//сюда сохраним размеры окна которое создаст программа
+} window;
 
 int gravity = 18;
 int all;

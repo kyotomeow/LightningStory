@@ -23,7 +23,7 @@ struct sprite {
     sprite(float x, float y, float w, float h)
         : x(x), y(y), width(w), height(h), hBitmap(NULL) {
     }
-    ~sprite() { // деструктор
+    ~sprite() { 
 
     }
 };
@@ -41,12 +41,23 @@ struct Platforms : sprite {
 
 
 struct Character : sprite {
-    int hp, hp, atackPower, current_loc, maxHp;
+    int hp, atackPower, current_loc, maxHp;
+    float speed;
     string name;
+
+    /*Character(float x, float y, float w, float h)
+        :sprite(x, y, w, h), velocityX(0), velocityY(0), isOnGround(false) {
+    }*/
 };
 
 struct Hero : Character {
+    float VelocityX, VelocityY;
+    bool OnGround;
 
+    /*Hero(float x, float y, float w, float h)
+        : Character(x, y, w, h), VelocityX(0), VelocityY(0), OnGround(false) {
+
+    }*/
 };
 
 struct Enemy : Character {
@@ -54,23 +65,42 @@ struct Enemy : Character {
 };
 
 HBITMAP hBack;// хэндл для фонового изображения
-
-    vector<Platforms> platform;
+    
+vector<Platforms> platform;
+Hero hero;
+Enemy enemy;
 
 //cекция кода
 
 void InitGame()
 {
-    //hero.hBitmap = (HBITMAP)LoadImageA(NULL, "racket.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    //enemy[0].hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    for (int i = 0; i <= 1; i++) {
+    
+    hero.hBitmap = (HBITMAP)LoadImageA(NULL, "racket.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    enemy.hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    
+    platform.push_back(Platforms(200, window.height - 50, 350, 30));
+    platform.push_back(Platforms(window.width - 400, 500, 300, 30));
+    
+    for (int i = 0; i < platform.size(); i++) {
         platform[i].hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     }
+    
     hBack = (HBITMAP)LoadImageA(NULL, "back.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    
     //------------------------------------------------------
-    platform.push_back(Platforms(200, window.height - 50, 350, 30));
-    platform.push_back(Platforms(window.width, 500, 300, 30));
+    
+    hero.width = 90;
+    hero.height = 180;
+    hero.x = 0;
+    hero.y = window.height - hero.height;
+    hero.speed = 30;
 
+    enemy.width = 90;
+    enemy.height = 190;
+    enemy.x = window.width - enemy.width;
+    enemy.y = window.height - enemy.height;
+    enemy.speed = 25;
 }
 
 void ProcessSound(const char* name)
@@ -79,11 +109,11 @@ void ProcessSound(const char* name)
         //ProcessSound("bounce.wav");
 }
 
-//void ProcessInput()
-//{
-//    if (GetAsyncKeyState(VK_LEFT)) hero.x -= hero.speed;
-//    if (GetAsyncKeyState(VK_RIGHT)) hero.x += hero.speed;
-//}
+void ProcessInput()
+{
+    if (GetAsyncKeyState(VK_LEFT)) hero.x -= hero.speed;
+    if (GetAsyncKeyState(VK_RIGHT)) hero.x += hero.speed;
+}
 
 
 //void GravityAndJump() {
@@ -127,8 +157,19 @@ void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool
 void ShowSprites()
 {
     ShowBitmap(window.context, 0, 0, window.width, window.height, hBack);//задний фон
-    ShowBitmap(window.context, platform[0].x, platform[0].y, platform[0].width, platform[0].height, hBack);
-    //ShowBitmap(window.context, hero.x, hero.y, hero.width, hero.height, hero.hBitmap);
+
+    for (int i = 0; i < platform.size(); i++) {
+        ShowBitmap(window.context,
+            platform[i].x,
+            platform[i].y,
+            platform[i].width,
+            platform[i].height,
+            platform[i].hBitmap);
+    }
+    
+    ShowBitmap(window.context, enemy.x, enemy.y, enemy.width, enemy.height, enemy.hBitmap);
+
+    ShowBitmap(window.context, hero.x, hero.y, hero.width, hero.height, hero.hBitmap);
     
 }
 
@@ -254,7 +295,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
         
         //ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
-        //ProcessInput();//опрос клавиатуры
+        ProcessInput();//опрос клавиатуры
         //WallsCheck();//проверяем, чтобы ракетка не убежала за экран
         //GravityAndJump();
     }

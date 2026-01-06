@@ -30,11 +30,11 @@ struct sprite {
 
 
 struct Platforms : sprite {
-    bool Solid;
-    float MoveX, MoveY;
+    bool Solid, firstPos;
+    float speed, firstX, secondX, firstY, secondY;
 
     Platforms(float x, float y, float w, float h, bool solid = true)
-        : sprite(x, y, w, h), Solid(solid), MoveX(0), MoveY(0) {
+        : sprite(x, y, w, h), Solid(solid), firstPos(true), speed(5), firstX(0), secondX(0), firstY(0), secondY(0) {
     }
 };
 
@@ -46,8 +46,7 @@ struct Character : sprite {
     string name;
 
     /*Character(float x, float y, float w, float h)
-        :sprite(x, y, w, h), velocityX(0), velocityY(0), isOnGround(false) {
-    }*/
+        : sprite(x,y,w,h), hp(100), atackPower(10), current_loc(0), maxHp(200), speed(30), name("Character"){ }*/
 };
 
 struct Hero : Character {
@@ -55,13 +54,11 @@ struct Hero : Character {
     bool OnGround;
 
     /*Hero(float x, float y, float w, float h)
-        : Character(x, y, w, h), VelocityX(0), VelocityY(0), OnGround(false) {
-
-    }*/
+        : Character(x,y,w,h), VelocityX(0), VelocityY(0), OnGround(false){ }*/
 };
 
 struct Enemy : Character {
-    float StartX, StartY;
+
 };
 
 HBITMAP hBack;// хэндл для фонового изображения
@@ -79,8 +76,18 @@ void InitGame()
 
     enemy.hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     
-    platform.push_back(Platforms(200, window.height - 50, 350, 30));
-    platform.push_back(Platforms(window.width - 400, 500, 300, 30));
+    platform.push_back(Platforms(200, window.height - 500, 350, 30));
+    platform[0].firstX = platform[0].x;
+    platform[0].firstY = platform[0].y;
+    platform[0].secondX = platform[0].x + 300;
+    platform[0].secondY = platform[0].y - 300;
+
+    platform.push_back(Platforms(window.width - 400, 500, 400, 30));
+    platform.push_back(Platforms(0, window.height - 30, window.width, 30));
+    platform.push_back(Platforms(1000, 300, 400, 30));
+    platform.push_back(Platforms(800, window.height - 300, 600, 30));
+
+
     
     for (int i = 0; i < platform.size(); i++) {
         platform[i].hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -93,13 +100,13 @@ void InitGame()
     hero.width = 90;
     hero.height = 180;
     hero.x = 0;
-    hero.y = window.height - hero.height;
+    hero.y = window.height - hero.height - platform[2].height;
     hero.speed = 30;
 
     enemy.width = 90;
     enemy.height = 190;
     enemy.x = window.width - enemy.width;
-    enemy.y = window.height - enemy.height;
+    enemy.y = window.height - enemy.height - platform[2].height;
     enemy.speed = 25;
 }
 
@@ -116,15 +123,15 @@ void ProcessInput()
 }
 
 
-//void GravityAndJump() {
-//
-//    hero.y += gravity;
-//
-//    if (GetAsyncKeyState(VK_SPACE))
-//    {
-//        hero.y -= 110;
-//    }
-//}
+void GravityAndJump() {
+
+    hero.y += 15;
+
+    if (GetAsyncKeyState(VK_SPACE))
+    {
+        hero.y -= 110;
+    }
+}
 
 void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
 {
@@ -174,39 +181,34 @@ void ShowSprites()
 }
 
 
-//void WallsCheck()
-//{
-//    hero.x = max(hero.x, 0);//если коодината левого угла ракетки меньше нуля, присвоим ей ноль
-//    hero.x = min(hero.x, window.width - hero.width);//аналогично для правого угла
-//}
-//
-//void RoofAndFloorCheck()
-//{
-//    hero.y = max(hero.y, 0);
-//    hero.y = min(hero.y,window.height - hero.height);
-//}
-
-
-bool CheckCollisions(float firstx, float firsty, float firstw, float firsth,
-    float secondx, float secondy, float secondw, float secondh)
+void WallsCheck()
 {
-    return (firstx < secondx + secondw &&
-        firstx + firstw > secondx &&
-        firsty < secondy + secondh &&
-        firsty + firsth > secondy);
+    hero.x = max(hero.x, 0);//если коодината левого угла ракетки меньше нуля, присвоим ей ноль
+    hero.x = min(hero.x, window.width - hero.width);//аналогично для правого угла
 }
 
-void WorkCollisions(float& firstx, float& firsty, float& firstw, float& firsth, float& secondx, float& secondy, float& secondw, float& secondh)
+
+bool CheckCollisions(float x, float y, float w, float h,
+    float otherx, float othery, float otherw, float otherh)
+{
+    return (x < otherx + otherw &&
+        x + w > otherx &&
+        y < othery + otherh &&
+        y + h > othery);
+}
+
+void WorkCollisions(float& x, float& y, float& w, float& h, 
+    float otherx, float othery, float otherw, float otherh)
 {
    
     float x1, x2, y1, y2, overx, overy, res;
-    if (CheckCollisions(firstx, firsty, firstw, firsth,
-        secondx, secondy, secondw, secondh))
+    if (CheckCollisions(x, y, w, h,
+        otherx, othery, otherw, otherh))
     {
-        x1 = secondx - firstx + secondw;
-        x2 = firstx + firstw - secondx;
-        y1 = secondy - firsty + secondh;
-        y2 = firsty + firsth - secondy;
+        x1 = otherx - x + otherw;
+        x2 = x + w - otherx;
+        y1 = othery - y + otherh;
+        y2 = y + h - othery;
 
         overx = min(x1, x2);
         overy = min(y1, y2);
@@ -214,23 +216,20 @@ void WorkCollisions(float& firstx, float& firsty, float& firstw, float& firsth, 
         res = min(overx, overy);
 
         if (res == x1) {
-            firstx = secondx + secondw;
+            x = otherx + otherw;
 
         }
         else if (res == x2) {
-            firstx = secondx - firstw;
+            x = otherx - w;
         }
         else if (res == y1) {
 
-            firsty = secondy + secondh;
+            y = othery + otherh;
         }
         else if (res == y2) {
-            firsty = secondy - firsth;
+            y = othery - h;
         }
     } 
-    else {
-        
-    }
 }
 //void ShowScore()
 //{
@@ -250,15 +249,43 @@ void WorkCollisions(float& firstx, float& firsty, float& firstw, float& firsth, 
 //    TextOutA(window.context, 10, 100, "Balls", 5);
 //    TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
 //}
-        //ProcessSound("bounce.wav"); platform[0].y >= hero.y
-//void ProcessRoom()
-//{
-//    RoofAndFloorCheck();
-//    for (int i = 0; i <= 4; i++) {
-//        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
-//    }
-//
-//}
+
+
+void MovePlat() {
+    if (platform[0].x >= platform[0].firstX && platform[0].x < platform[0].secondX &&
+        platform[0].y <= platform[0].firstY && platform[0].y > platform[0].secondY &&
+        platform[0].firstPos == true) {
+
+        platform[0].x += platform[0].speed;
+        platform[0].y -= platform[0].speed;
+
+
+        if (platform[0].x == platform[0].secondX && platform[0].y == platform[0].secondY) {
+            platform[0].firstPos = false; 
+        }
+    }
+    else if (platform[0].x <= platform[0].secondX && platform[0].x > platform[0].firstX &&
+        platform[0].y >= platform[0].secondY && platform[0].y < platform[0].firstY && 
+        platform[0].firstPos == false) {
+
+        platform[0].x -= platform[0].speed;
+        platform[0].y += platform[0].speed;
+
+        if (platform[0].x == platform[0].firstX && platform[0].y == platform[0].firstY) {
+            platform[0].firstPos = true;
+        }
+    }
+}
+
+void ProcessRoom()
+{
+    MovePlat();
+
+    for (int i = 0; i < platform.size(); i++) {
+        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+    }
+
+}
 
 void InitWindow()
 {
@@ -294,9 +321,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
         
-        //ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
+        ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
         ProcessInput();//опрос клавиатуры
-        //WallsCheck();//проверяем, чтобы ракетка не убежала за экран
-        //GravityAndJump();
+        WallsCheck();//проверяем, чтобы ракетка не убежала за экран
+        GravityAndJump();
     }
 }

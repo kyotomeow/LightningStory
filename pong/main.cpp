@@ -295,6 +295,47 @@ void WorkCollisions(float& x, float& y, float& w, float& h,
         }
     } 
 }
+
+void MovePlat() {
+
+    Platforms& p = platform[1];
+    if (p.firstPos) {
+
+        p.x += p.speed;
+        p.y -= p.speed;
+
+
+        if (p.x >= p.secondX && p.y <= p.secondY) {
+
+            p.firstPos = false; 
+            p.x = p.secondX;
+            p.y = p.secondY;
+        }
+    }
+    else {
+
+        p.x -= p.speed;
+        p.y += p.speed;
+
+        if (p.x <= p.firstX && p.y >= p.firstY) {
+
+            p.firstPos = false;
+            p.x = p.firstX;
+            p.y = p.firstY;
+        }
+    }
+}
+
+void ProcessRoom()
+{
+    MovePlat();
+
+    for (int i = 0; i < platform.size(); i++) {
+        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+    }
+
+}
+
 //void ShowScore()
 //{
 //    //поиграем шрифтами и цветами
@@ -313,43 +354,6 @@ void WorkCollisions(float& x, float& y, float& w, float& h,
 //    TextOutA(window.context, 10, 100, "Balls", 5);
 //    TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
 //}
-
-
-void MovePlat() {
-    if (platform[0].x >= platform[0].firstX && platform[0].x < platform[0].secondX &&
-        platform[0].y <= platform[0].firstY && platform[0].y > platform[0].secondY &&
-        platform[0].firstPos == true) {
-
-        platform[0].x += platform[0].speed;
-        platform[0].y -= platform[0].speed;
-
-
-        if (platform[0].x == platform[0].secondX && platform[0].y == platform[0].secondY) {
-            platform[0].firstPos = false; 
-        }
-    }
-    else if (platform[0].x <= platform[0].secondX && platform[0].x > platform[0].firstX &&
-        platform[0].y >= platform[0].secondY && platform[0].y < platform[0].firstY && 
-        platform[0].firstPos == false) {
-
-        platform[0].x -= platform[0].speed;
-        platform[0].y += platform[0].speed;
-
-        if (platform[0].x == platform[0].firstX && platform[0].y == platform[0].firstY) {
-            platform[0].firstPos = true;
-        }
-    }
-}
-
-void ProcessRoom()
-{
-    MovePlat();
-
-    for (int i = 0; i < platform.size(); i++) {
-        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
-    }
-
-}
 
 void InitWindow()
 {

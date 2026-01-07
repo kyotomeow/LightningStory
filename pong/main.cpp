@@ -42,14 +42,21 @@ struct Platforms : sprite {
 
     Platforms () : sprite(){}
 
-    Platforms(float x, float y, float w, float h, bool solid = true, int cur_loc )
-        : sprite(x, y, w, h), Solid(solid), current_loc(cur_loc) {
+    Platforms(float x, float y, float w, float h,  int cur_loc, bool solid = true )
+        : sprite(x, y, w, h), current_loc(cur_loc), Solid(solid) {
     }
 
-    Platforms(float x, float y, float w, float h, bool solid = true, bool Pos = true, 
-        float speed, float Fx, float Sx, float Fy, float Sy, int cur_loc)
-        : sprite(x, y, w, h), Solid(solid), firstPos(Pos), speed(speed), firstX(Fx), 
-        secondX(Sx), firstY(Fy), secondY(Sy), current_loc(cur_loc) {
+    Platforms(float x, float y, float w, float h, int cur_loc, bool solid, float spd, float Fx,
+        float Sx, float Fy, float Sy, bool Pos)
+        : Platforms(x, y, w, h, cur_loc, solid)
+    {
+        speed = spd;
+        firstX = Fx;
+        secondX = Sx;
+        firstY = Fy; 
+        secondY = Sy;
+        Solid = solid;
+        firstPos = Pos;
     }
 
     ~Platforms() {
@@ -71,13 +78,13 @@ struct Character : sprite {
 };
 
 struct Hero : Character {
-    float VelocityX = 0;
+    /*float VelocityX = 0;
     float VelocityY = 0;
-    bool OnGround = false; 
+    bool OnGround = false; */
 
-    Hero() : Character() {
+    /*Hero() : Character() {
 
-    }
+    }*/
 
   /*  Hero(float x, float y, float w, float h)
         : Character(x, y, w, h),   {
@@ -104,16 +111,16 @@ void InitGame()
 
     enemy.hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     
-    platform.push_back(Platforms(200, window.height - 500, 350, 30));
+    platform.push_back(Platforms(200, window.height - 500, 350, 30, 0));
     platform[0].firstX = platform[0].x;
     platform[0].firstY = platform[0].y;
     platform[0].secondX = platform[0].x + 300;
     platform[0].secondY = platform[0].y - 300;
 
-    platform.push_back(Platforms(window.width - 400, 500, 400, 30));
-    platform.push_back(Platforms(0, window.height - 30, window.width, 30));
-    platform.push_back(Platforms(1000, 300, 400, 30));
-    platform.push_back(Platforms(800, window.height - 300, 600, 30));
+    platform.push_back(Platforms(window.width - 400, 500, 400, 30, 0));
+    platform.push_back(Platforms(0, window.height - 30, window.width, 30, 0));
+    platform.push_back(Platforms(1000, 300, 400, 30, 0));
+    platform.push_back(Platforms(800, window.height - 300, 600, 30, 0));
 
 
     

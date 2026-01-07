@@ -319,7 +319,7 @@ void MovePlat() {
 
         if (p.x <= p.firstX && p.y >= p.firstY) {
 
-            p.firstPos = false;
+            p.firstPos = true;
             p.x = p.firstX;
             p.y = p.firstY;
         }

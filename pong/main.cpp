@@ -55,7 +55,6 @@ struct Platforms : sprite {
         secondX = Sx;
         firstY = Fy; 
         secondY = Sy;
-        Solid = solid;
         firstPos = Pos;
     }
 
@@ -75,55 +74,91 @@ struct Character : sprite {
     string name = "Character";
 
     Character() : sprite() {}
+
+    Character(float x, float y, float w, float h) 
+        : sprite(x, y, w, h){ }
+
+    Character(float x, float y, float w, float h, int hitPoint, int atc, int cur_loc, int MHp, float spd, string n)
+        : Character(x, y, w, h)
+    {
+        hp = hitPoint;
+        atackPower = atc;
+        current_loc = cur_loc;
+        maxHp = MHp;
+        speed = spd;
+        name = n;
+    }
+
+    ~Character(){
+    
+    }
 };
 
 struct Hero : Character {
-    /*float VelocityX = 0;
+    float VelocityX = 0;
     float VelocityY = 0;
-    bool OnGround = false; */
+    bool OnGround = false; 
 
-    /*Hero() : Character() {
+    Hero() : Character() {
 
-    }*/
+    }
 
-  /*  Hero(float x, float y, float w, float h)
-        : Character(x, y, w, h),   {
+    Hero(float x, float y, float w, float h)
+        : Character(x, y, w, h)   {
 
-    }*/
+    }
+
+    Hero(float x, float y, float w, float h, float velX, float velY, bool onGround)
+        : Character(x, y, w, h), VelocityX(velX), VelocityY(velY), OnGround(onGround) {
+    }
+
+    ~Hero() {
+
+    }
 };
 
 struct Enemy : Character {
 
+
+    Enemy() : Character() {
+
+    }
+
+    Enemy(float x, float y, float w, float h)
+        : Character(x, y, w, h) {
+
+    }
+
+    ~Enemy() {
+    
+    }
 };
 
 HBITMAP hBack;// хэндл для фонового изображения
     
 vector<Platforms> platform;
-Hero hero;
-Enemy enemy;
+Hero hero(0, 0, 90, 180);
+Enemy enemy(0, 0, 90, 190);
 
 //cекция кода
 
 void InitGame()
 {
-    
     hero.hBitmap = (HBITMAP)LoadImageA(NULL, "racket.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
     enemy.hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     
-    platform.push_back(Platforms(200, window.height - 500, 350, 30, 0));
-    platform[0].firstX = platform[0].x;
-    platform[0].firstY = platform[0].y;
-    platform[0].secondX = platform[0].x + 300;
-    platform[0].secondY = platform[0].y - 300;
+    platform.push_back(Platforms(0, window.height - 30, window.width, 30, 0));// Пол, индекс 0
 
-    platform.push_back(Platforms(window.width - 400, 500, 400, 30, 0));
-    platform.push_back(Platforms(0, window.height - 30, window.width, 30, 0));
-    platform.push_back(Platforms(1000, 300, 400, 30, 0));
-    platform.push_back(Platforms(800, window.height - 300, 600, 30, 0));
+    platform.push_back(Platforms(200, window.height - 500, 350, 30, 0));//динамическая платформа индекс 1
+    platform[1].firstX = platform[1].x;
+    platform[1].firstY = platform[1].y;
+    platform[1].secondX = platform[1].x + 300;
+    platform[1].secondY = platform[1].y - 300;
 
+    platform.push_back(Platforms(window.width - 400, 500, 400, 30, 0));//индекс 2
+    platform.push_back(Platforms(1000, 300, 400, 30, 0));//индекс 3
+    platform.push_back(Platforms(800, window.height - 300, 600, 30, 0)); //индекс 4
 
-    
     for (int i = 0; i < platform.size(); i++) {
         platform[i].hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     }
@@ -131,17 +166,11 @@ void InitGame()
     hBack = (HBITMAP)LoadImageA(NULL, "back.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     
     //------------------------------------------------------
-    
-    hero.width = 90;
-    hero.height = 180;
-    hero.x = 0;
-    hero.y = window.height - hero.height - platform[2].height;
-    hero.speed = 30;
 
-    enemy.width = 90;
-    enemy.height = 190;
+    hero.y = window.height - hero.height - platform[0].height;
+
     enemy.x = window.width - enemy.width;
-    enemy.y = window.height - enemy.height - platform[2].height;
+    enemy.y = window.height - enemy.height - platform[0].height;
     enemy.speed = 25;
 }
 

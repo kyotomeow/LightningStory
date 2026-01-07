@@ -20,8 +20,9 @@ struct sprite {
     HBITMAP hBitmap;
 
     sprite() : x(0), y(0), width(0), height(0), hBitmap(NULL) {}
+    
     sprite(float x, float y, float w, float h)
-        : x(x), y(y), width(w), height(h), hBitmap(NULL) {
+        : x(x), y(y), width(w), height(h) {
     }
     ~sprite() { 
 
@@ -30,31 +31,58 @@ struct sprite {
 
 
 struct Platforms : sprite {
-    bool Solid, firstPos;
-    float speed, firstX, secondX, firstY, secondY;
+    bool Solid = true;
+    bool firstPos = true;
+    float speed = 5;
+    float firstX = 0;
+    float secondX = 0;
+    float firstY = 0;
+    float secondY = 0;
+    int current_loc = 0;
 
-    Platforms(float x, float y, float w, float h, bool solid = true)
-        : sprite(x, y, w, h), Solid(solid), firstPos(true), speed(5), firstX(0), secondX(0), firstY(0), secondY(0) {
+    Platforms () : sprite(){}
+
+    Platforms(float x, float y, float w, float h, bool solid = true, int cur_loc )
+        : sprite(x, y, w, h), Solid(solid), current_loc(cur_loc) {
+    }
+
+    Platforms(float x, float y, float w, float h, bool solid = true, bool Pos = true, 
+        float speed, float Fx, float Sx, float Fy, float Sy, int cur_loc)
+        : sprite(x, y, w, h), Solid(solid), firstPos(Pos), speed(speed), firstX(Fx), 
+        secondX(Sx), firstY(Fy), secondY(Sy), current_loc(cur_loc) {
+    }
+
+    ~Platforms() {
+
     }
 };
 
 
 
 struct Character : sprite {
-    int hp, atackPower, current_loc, maxHp;
-    float speed;
-    string name;
+    int hp = 100; 
+    int atackPower = 10;
+    int current_loc = 0;
+    int maxHp = 200;
+    float speed = 30;
+    string name = "Character";
 
-    /*Character(float x, float y, float w, float h)
-        : sprite(x,y,w,h), hp(100), atackPower(10), current_loc(0), maxHp(200), speed(30), name("Character"){ }*/
+    Character() : sprite() {}
 };
 
 struct Hero : Character {
-    float VelocityX, VelocityY;
-    bool OnGround;
+    float VelocityX = 0;
+    float VelocityY = 0;
+    bool OnGround = false; 
 
-    /*Hero(float x, float y, float w, float h)
-        : Character(x,y,w,h), VelocityX(0), VelocityY(0), OnGround(false){ }*/
+    Hero() : Character() {
+
+    }
+
+  /*  Hero(float x, float y, float w, float h)
+        : Character(x, y, w, h),   {
+
+    }*/
 };
 
 struct Enemy : Character {

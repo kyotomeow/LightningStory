@@ -262,12 +262,9 @@ void GravityAndJump() {
     
     if (GetAsyncKeyState(VK_SPACE) && hero.OnGround)
     {
+        hero.OnGround = false;
         hero.VelocityY -= 40;
     }
-    if (hero.OnGround) {
-        hero.OnGround = false;
-    }
-    
 }
 
 void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
@@ -332,7 +329,6 @@ void MovePlat() {
         p.x += p.speed;
         p.y -= p.speed;
 
-
         if (p.x >= p.secondX && p.y <= p.secondY) {
 
             p.firstPos = false; 
@@ -367,24 +363,28 @@ void ProcessRoom()
 
 }
 
-//void ShowScore()
-//{
-//    //поиграем шрифтами и цветами
-//    SetTextColor(window.context, RGB(160, 160, 160));
-//    SetBkColor(window.context, RGB(0, 0, 0));
-//    SetBkMode(window.context, TRANSPARENT);
-//    auto hFont = CreateFont(70, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 2, 0, "CALIBRI");
-//    auto hTmp = (HFONT)SelectObject(window.context, hFont);
-//
-//    char txt[32];//буфер для текста
-//    _itoa_s(hero.x, txt, 10);//преобразование числовой переменной в текст. текст окажется в переменной txt
-//    TextOutA(window.context, 10, 10, "Score", 5);
-//    TextOutA(window.context, 200, 10, (LPCSTR)txt, strlen(txt));
-//
-//    _itoa_s(hero.y, txt, 10);
-//    TextOutA(window.context, 10, 100, "Balls", 5);
-//    TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
-//}
+void ShowScore()
+{
+    //поиграем шрифтами и цветами
+    SetTextColor(window.context, RGB(160, 160, 160));
+    SetBkColor(window.context, RGB(0, 0, 0));
+    SetBkMode(window.context, TRANSPARENT);
+    auto hFont = CreateFont(70, 0, 0, 0, FW_BOLD, 0, 0, 0, 0, 0, 0, 2, 0, "CALIBRI");
+    auto hTmp = (HFONT)SelectObject(window.context, hFont);
+
+    char txt[32];//буфер для текста
+    if (hero.OnGround) {
+
+    _itoa_s(hero.x, txt, 10);//преобразование числовой переменной в текст. текст окажется в переменной txt
+    TextOutA(window.context, 10, 10, "tttt", 5);
+    TextOutA(window.context, 200, 10, (LPCSTR)txt, strlen(txt));
+    }
+    else {
+    _itoa_s(hero.y, txt, 10);
+    TextOutA(window.context, 10, 100, "ffff", 5);
+    TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
+    }
+}
 
 void InitWindow()
 {
@@ -416,7 +416,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
         ShowSprites();//рисуем фон, ракетку и шарик
-        //ShowScore();
+        ShowScore();
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
         

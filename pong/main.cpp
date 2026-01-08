@@ -352,6 +352,8 @@ void MovePlat() {
 
 void ProcessRoom()
 {
+    hero.OnGround = false;
+
     MovePlat();
 
     hero.x += hero.VelocityX;

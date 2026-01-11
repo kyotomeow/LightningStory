@@ -183,6 +183,24 @@ bool CheckCollisions(float x, float y, float w, float h,
         y + h > othery);
 }
 
+float approach(float speed,float target, float increase)
+{
+    if (speed != 0)
+    {
+        int f = 1;
+
+    }
+    float dt = 1. / 60.;
+    
+    if (speed < target)
+    {
+        return min(speed + increase * dt, target);
+    }
+    return max(speed - increase * dt, target);
+}
+
+
+
 void WorkCollisions(float& x, float& y, float w, float h,
     float otherx, float othery, float otherw, float otherh)
 {
@@ -232,32 +250,31 @@ void ProcessSound(const char* name)
 
 void ProcessInput()
 {
-    
     if (GetAsyncKeyState(VK_LEFT)) 
     {
-        hero.VelocityX = -hero.speed;
+        hero.VelocityX = approach(hero.VelocityX, -hero.speed, 150);
     }
     else if (GetAsyncKeyState(VK_RIGHT)) 
     {
-        hero.VelocityX = hero.speed;
+        hero.VelocityX = approach(hero.VelocityX, hero.speed, 150);
     }
-    else 
+    else
     {
-        hero.VelocityX = 0;
+        hero.VelocityX = approach(hero.VelocityX, 0, 1000);
     }
 }
 
 void GravityAndJump() {
 
     if (!hero.OnGround) {
-        hero.VelocityY += 2;
-        hero.speed *= 0.97;
-        if (hero.speed<=17) {
-            hero.speed = 17;
-        }
+        hero.VelocityY = approach(hero.VelocityY, 40.6f, 150.f);
+        //hero.speed *= 0.97;
+        //if (hero.speed<=17) {
+        //    hero.speed = 17;
+        //}
     }
     else {
-        hero.VelocityY = 0;
+        hero.VelocityY = approach(hero.VelocityY, 0, 100);
     }
     
     if (GetAsyncKeyState(VK_SPACE) && hero.OnGround)
@@ -337,7 +354,6 @@ void MovePlat() {
         }
     }
     else {
-
         p.x -= p.speed;
         p.y += p.speed;
 
@@ -421,7 +437,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         ShowScore();
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
-        
         ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
         ProcessInput();//опрос клавиатуры
         WallsCheck();//проверяем, чтобы ракетка не убежала за экран

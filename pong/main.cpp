@@ -30,6 +30,7 @@ struct sprite {
 };
 
 
+
 struct Platforms : sprite {
     bool Solid = true;
     bool firstPos = true;

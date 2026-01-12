@@ -64,22 +64,24 @@ struct Platforms : sprite {
     }
 };
 
-
-
 struct Character : sprite {
     int hp = 100; 
     int atackPower = 10;
     int current_loc = 0;
     int maxHp = 200;
-    float speed = 30;
+    float speed = 15;
+    float VelocityX = 0;
+    float VelocityY = 0;
     string name = "Character";
+    bool OnGround = false;
 
     Character() : sprite() {}
 
     Character(float x, float y, float w, float h) 
         : sprite(x, y, w, h){ }
 
-    Character(float x, float y, float w, float h, int hitPoint, int atc, int cur_loc, int MHp, float spd, string n)
+    Character(float x, float y, float w, float h, int hitPoint, int atc, int cur_loc, int MHp, float spd,
+        float velX, float velY, string n, bool onGround)
         : Character(x, y, w, h)
     {
         hp = hitPoint;
@@ -87,7 +89,10 @@ struct Character : sprite {
         current_loc = cur_loc;
         maxHp = MHp;
         speed = spd;
+        VelocityX = velX;
+        VelocityY = velY;
         name = n;
+        OnGround = onGround;
     }
 
     ~Character(){
@@ -96,9 +101,7 @@ struct Character : sprite {
 };
 
 struct Hero : Character {
-    float VelocityX = 0;
-    float VelocityY = 0;
-    bool OnGround = false; 
+     
 
     Hero() : Character() {
 
@@ -109,10 +112,6 @@ struct Hero : Character {
 
     }
 
-    Hero(float x, float y, float w, float h, float velX, float velY, bool onGround)
-        : Character(x, y, w, h), VelocityX(velX), VelocityY(velY), OnGround(onGround) {
-    }
-
     ~Hero() {
 
     }
@@ -120,6 +119,7 @@ struct Hero : Character {
 
 struct Enemy : Character {
 
+    bool PatrolRight = true;
 
     Enemy() : Character() {
 
@@ -128,6 +128,11 @@ struct Enemy : Character {
     Enemy(float x, float y, float w, float h)
         : Character(x, y, w, h) {
 
+    }
+
+    Enemy(float x, float y, float w, float h, bool PatR)
+        : Character(x, y, w, h) {
+        PatrolRight = PatR;
     }
 
     ~Enemy() {
@@ -140,6 +145,7 @@ HBITMAP hBack;// хэндл для фонового изображения
 vector<Platforms> platform;
 Hero hero(0, 0, 90, 180);
 Enemy enemy(0, 0, 90, 190);
+const float GRAVITY = 200.0f;
 
 //cекция кода
 
@@ -172,7 +178,7 @@ void InitGame()
 
     enemy.x = window.width - enemy.width;
     enemy.y = window.height - enemy.height - platform[0].height;
-    enemy.speed = 25;
+    enemy.speed = 10;
 }
 
 bool CheckCollisions(float x, float y, float w, float h,
@@ -184,23 +190,19 @@ bool CheckCollisions(float x, float y, float w, float h,
         y + h > othery);
 }
 
-float approach(float speed,float target, float increase)
+float approach(float current, float target, float speed)
 {
-    if (speed != 0)
-    {
-        int f = 1;
+    float dt = 1.0f / 60.0f;
 
+    if (current < target) {
+        // Увеличиваем current, но не больше чем target
+        return min(current + speed * dt, target);
     }
-    float dt = 1. / 60.;
-    
-    if (speed < target)
-    {
-        return min(speed + increase * dt, target);
+    else {
+        // Уменьшаем current, но не меньше чем target
+        return max(current - speed * dt, target);
     }
-    return max(speed - increase * dt, target);
 }
-
-
 
 void WorkCollisions(float& x, float& y, float w, float h,
     float otherx, float othery, float otherw, float otherh)
@@ -237,7 +239,8 @@ void WorkCollisions(float& x, float& y, float w, float h,
         else if (res == y2) {
             y = othery - h;
             hero.OnGround = true;
-            hero.speed = 30;
+            enemy.OnGround = true;
+            hero.speed = 22.5f;
             hero.VelocityY *= -0.05;
         }
     }
@@ -261,27 +264,40 @@ void ProcessInput()
     }
     else
     {
-        hero.VelocityX = approach(hero.VelocityX, 0, 1000);
+        hero.VelocityX = approach(hero.VelocityX, 0, 225);
     }
 }
 
-void GravityAndJump() {
+void HeroGravityAndJump() {
 
     if (!hero.OnGround) {
-        hero.VelocityY = approach(hero.VelocityY, 40.6f, 150.f);
-        //hero.speed *= 0.97;
-        //if (hero.speed<=17) {
-        //    hero.speed = 17;
-        //}
+        // Плавно увеличиваем скорость падения
+        hero.VelocityY = approach(hero.VelocityY, 800.0f, GRAVITY);
     }
     else {
-        hero.VelocityY = approach(hero.VelocityY, 0, 100);
+        hero.VelocityY = 0;
     }
-    
-    if (GetAsyncKeyState(VK_SPACE) && hero.OnGround)
-    {
+
+    if ((GetAsyncKeyState(VK_SPACE) & 0x8000) && hero.OnGround) {
         hero.OnGround = false;
-        hero.VelocityY -= 40;
+        hero.VelocityY = -50.0f;
+        //hero.VelocityY = approach(hero.VelocityY, -500, 3000);
+    }
+}
+
+void EnemyGravity()
+{
+    if (!enemy.OnGround) {
+        
+        enemy.VelocityY = approach(enemy.VelocityY, 1000.0f, GRAVITY);
+    }
+    else {
+        enemy.VelocityY = 0;
+    }
+
+    if ((enemy.OnGround && hero.x < enemy.x)) {
+        enemy.OnGround = false;
+        enemy.VelocityY = -50.0f;
     }
 }
 
@@ -367,20 +383,50 @@ void MovePlat() {
     }
 }
 
+void EnemyMove()
+{
+    if (enemy.PatrolRight)
+    {
+        enemy.VelocityX = approach(enemy.VelocityX, enemy.speed, 50);
+        if (enemy.x > window.width - enemy.width - 50)
+        {
+            enemy.PatrolRight = false;
+        }
+    }
+    else
+    {
+        enemy.VelocityX = approach(enemy.VelocityX, -enemy.speed, 50);
+        if (enemy.x <= window.width / 2)
+        {
+            enemy.PatrolRight = true;
+        }
+    }
+
+}
+
 void ProcessRoom()
 {
     hero.OnGround = false;
+    enemy.OnGround = false;
 
     MovePlat();
 
     hero.x += hero.VelocityX;
     hero.y += hero.VelocityY;
 
+    enemy.x += enemy.VelocityX;
+    enemy.y += enemy.VelocityY;
+
     for (int i = 0; i < platform.size(); i++) {
         WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
     }
 
+    for (int i = 0; i < platform.size(); i++) {
+        WorkCollisions(enemy.x, enemy.y, enemy.width, enemy.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+    }
+
 }
+
 
 void ShowScore()
 {
@@ -403,6 +449,15 @@ void ShowScore()
     TextOutA(window.context, 10, 100, "ffff", 5);
     TextOutA(window.context, 200, 100, (LPCSTR)txt, strlen(txt));
     }
+
+    char debug[128];
+    sprintf_s(debug, "VelocityY: %.1f", hero.VelocityY);
+    TextOutA(window.context, 10, 200, debug, strlen(debug));
+    sprintf_s(debug, "VelocityY: %.1f", enemy.VelocityY);
+    TextOutA(window.context, 10, 400, debug, strlen(debug));
+
+    sprintf_s(debug, "OnGround: %s", hero.OnGround ? "YES" : "NO");
+    TextOutA(window.context, 10, 300, debug, strlen(debug));
 }
 
 void InitWindow()
@@ -436,11 +491,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         ShowSprites();//рисуем фон, ракетку и шарик
         ShowScore();
+
         BitBlt(window.device_context, 0, 0, window.width, window.height, window.context, 0, 0, SRCCOPY);//копируем буфер в окно
         Sleep(16);//ждем 16 милисекунд (1/количество кадров в секунду)
-        ProcessRoom();//обрабатываем отскоки от стен и каретки, попадание шарика в картетку
-        ProcessInput();//опрос клавиатуры
-        WallsCheck();//проверяем, чтобы ракетка не убежала за экран
-        GravityAndJump();
+        
+        ProcessRoom();
+        HeroGravityAndJump();
+        EnemyGravity();
+        ProcessInput();
+        WallsCheck();
+        EnemyMove();
     }
 }

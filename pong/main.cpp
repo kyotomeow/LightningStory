@@ -69,11 +69,12 @@ struct Character : sprite {
     int atackPower = 10;
     int current_loc = 0;
     int maxHp = 200;
-    float speed = 15;
+    float speed = 22.5f;
     float VelocityX = 0;
     float VelocityY = 0;
     string name = "Character";
     bool OnGround = false;
+    bool LookRight = true;
 
     Character() : sprite() {}
 
@@ -81,7 +82,7 @@ struct Character : sprite {
         : sprite(x, y, w, h){ }
 
     Character(float x, float y, float w, float h, int hitPoint, int atc, int cur_loc, int MHp, float spd,
-        float velX, float velY, string n, bool onGround)
+        float velX, float velY, string n, bool onGround, bool lookR)
         : Character(x, y, w, h)
     {
         hp = hitPoint;
@@ -93,6 +94,7 @@ struct Character : sprite {
         VelocityY = velY;
         name = n;
         OnGround = onGround;
+        LookRight = lookR;
     }
 
     ~Character(){
@@ -204,7 +206,7 @@ float approach(float current, float target, float speed)
     }
 }
 
-void WorkCollisions(float& x, float& y, float w, float h,
+void WorkCollisions(Character& charact, float& x, float& y, float w, float h,
     float otherx, float othery, float otherw, float otherh)
 {
 
@@ -224,26 +226,34 @@ void WorkCollisions(float& x, float& y, float w, float h,
 
         if (res == x1) {
             x = otherx + otherw;
-            hero.VelocityX *= -0.05;
+            charact.VelocityX *= -0.05;
 
         }
         else if (res == x2) {
             x = otherx - w;
-            hero.VelocityX *= -0.05;
+            charact.VelocityX *= -0.05;
         }
         else if (res == y1) {
 
             y = othery + otherh;
-            hero.VelocityY *= -0.05;
+            charact.VelocityY *= -0.05;
         }
         else if (res == y2) {
             y = othery - h;
-            hero.OnGround = true;
-            enemy.OnGround = true;
-            hero.speed = 22.5f;
-            hero.VelocityY *= -0.05;
+            charact.OnGround = true;
+            charact.VelocityY *= -0.05;
         }
     }
+}
+
+void Attack()
+{
+    if(GetAsyncKeyState())
+}
+
+void ProcDamage()
+{
+
 }
 
 void ProcessSound(const char* name)
@@ -285,21 +295,21 @@ void HeroGravityAndJump() {
     }
 }
 
-void EnemyGravity()
-{
-    if (!enemy.OnGround) {
-        
-        enemy.VelocityY = approach(enemy.VelocityY, 1000.0f, GRAVITY);
-    }
-    else {
-        enemy.VelocityY = 0;
-    }
-
-    if ((enemy.OnGround && hero.x < enemy.x)) {
-        enemy.OnGround = false;
-        enemy.VelocityY = -50.0f;
-    }
-}
+//void EnemyGravity()
+//{
+//    if (!enemy.OnGround) {
+//        
+//        enemy.VelocityY = approach(enemy.VelocityY, 1000.0f, GRAVITY);
+//    }
+//    else {
+//        enemy.VelocityY = 0;
+//    }
+//
+//    if ((enemy.OnGround && hero.x > enemy.x)) {
+//        enemy.OnGround = false;
+//        enemy.VelocityY = -50.0f;
+//    }
+//}
 
 void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
 {
@@ -418,11 +428,11 @@ void ProcessRoom()
     enemy.y += enemy.VelocityY;
 
     for (int i = 0; i < platform.size(); i++) {
-        WorkCollisions(hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+        WorkCollisions(hero, hero.x, hero.y, hero.width, hero.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
     }
 
     for (int i = 0; i < platform.size(); i++) {
-        WorkCollisions(enemy.x, enemy.y, enemy.width, enemy.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
+        WorkCollisions(enemy, enemy.x, enemy.y, enemy.width, enemy.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
     }
 
 }
@@ -453,11 +463,15 @@ void ShowScore()
     char debug[128];
     sprintf_s(debug, "VelocityY: %.1f", hero.VelocityY);
     TextOutA(window.context, 10, 200, debug, strlen(debug));
+
     sprintf_s(debug, "VelocityY: %.1f", enemy.VelocityY);
     TextOutA(window.context, 10, 400, debug, strlen(debug));
 
     sprintf_s(debug, "OnGround: %s", hero.OnGround ? "YES" : "NO");
     TextOutA(window.context, 10, 300, debug, strlen(debug));
+
+    sprintf_s(debug, "OnGround: %s", enemy.OnGround ? "YES" : "NO");
+    TextOutA(window.context, 10, 500, debug, strlen(debug));
 }
 
 void InitWindow()
@@ -497,7 +511,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         
         ProcessRoom();
         HeroGravityAndJump();
-        EnemyGravity();
+        //EnemyGravity();
         ProcessInput();
         WallsCheck();
         EnemyMove();

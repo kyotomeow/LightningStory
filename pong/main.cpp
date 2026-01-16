@@ -248,12 +248,18 @@ void WorkCollisions(Character& charact, float& x, float& y, float w, float h,
 
 void Attack()
 {
-    if(GetAsyncKeyState())
+    if (GetAsyncKeyState(65))
+    {
+        hero.y = -500;
+    }
 }
 
 void ProcDamage()
 {
-
+    if (CheckCollisions)
+    {
+        
+    }
 }
 
 void ProcessSound(const char* name)
@@ -267,10 +273,12 @@ void ProcessInput()
     if (GetAsyncKeyState(VK_LEFT)) 
     {
         hero.VelocityX = approach(hero.VelocityX, -hero.speed, 150);
+        hero.LookRight = false;
     }
     else if (GetAsyncKeyState(VK_RIGHT)) 
     {
         hero.VelocityX = approach(hero.VelocityX, hero.speed, 150);
+        hero.LookRight = true;
     }
     else
     {
@@ -513,6 +521,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         HeroGravityAndJump();
         //EnemyGravity();
         ProcessInput();
+        Attack();
         WallsCheck();
         EnemyMove();
     }

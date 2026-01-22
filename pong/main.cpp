@@ -9,6 +9,9 @@
 
 using namespace std;
 
+float currentTime;
+float lastTime = 0;
+
 struct {
     HWND hWnd;//хэндл окна
     HDC device_context, context;// два контекста устройства (для буферизации)
@@ -29,7 +32,22 @@ struct sprite {
     }
 };
 
+struct AtackCollision : sprite {
 
+    AtackCollision() : sprite() {
+
+    }
+
+    AtackCollision(float x, float y, float w, float h)
+        : sprite(x, y, w, h) {
+
+    }
+
+    ~AtackCollision() {
+
+    }
+
+};
 
 struct Platforms : sprite {
     bool Solid = true;
@@ -65,23 +83,24 @@ struct Platforms : sprite {
 };
 
 struct Character : sprite {
-    int hp = 100; 
-    int atackPower = 10;
+    float hp = 100; 
+    float atackPower = 10;
     int current_loc = 0;
-    int maxHp = 200;
+    float maxHp = 200;
     float speed = 22.5f;
     float VelocityX = 0;
     float VelocityY = 0;
     string name = "Character";
     bool OnGround = false;
     bool LookRight = true;
+    AtackCollision atcColl[2];
 
     Character() : sprite() {}
 
     Character(float x, float y, float w, float h) 
         : sprite(x, y, w, h){ }
 
-    Character(float x, float y, float w, float h, int hitPoint, int atc, int cur_loc, int MHp, float spd,
+    Character(float x, float y, float w, float h, float hitPoint, float atc, int cur_loc, float MHp, float spd,
         float velX, float velY, string n, bool onGround, bool lookR)
         : Character(x, y, w, h)
     {
@@ -138,7 +157,7 @@ struct Enemy : Character {
     }
 
     ~Enemy() {
-    
+        
     }
 };
 
@@ -149,13 +168,14 @@ Hero hero(0, 0, 90, 180);
 Enemy enemy(0, 0, 90, 190);
 const float GRAVITY = 200.0f;
 
+
 //cекция кода
 
 void InitGame()
 {
     hero.hBitmap = (HBITMAP)LoadImageA(NULL, "racket.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     enemy.hBitmap = (HBITMAP)LoadImageA(NULL, "racket_enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    
+
     platform.push_back(Platforms(0, window.height - 30, window.width, 30, 0));// Пол, индекс 0
 
     platform.push_back(Platforms(200, window.height - 500, 350, 30, 0));//динамическая платформа индекс 1
@@ -177,6 +197,12 @@ void InitGame()
     //------------------------------------------------------
 
     hero.y = window.height - hero.height - platform[0].height;
+
+    hero.atcColl[0].x = hero.x + hero.width;
+    hero.atcColl[0].y = hero.y;
+    hero.atcColl[0].width = hero.width;
+    hero.atcColl[0].height = hero.height;
+    hero.atcColl[0].hBitmap = (HBITMAP)LoadImageA(NULL, "racket.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     enemy.x = window.width - enemy.width;
     enemy.y = window.height - enemy.height - platform[0].height;
@@ -246,19 +272,24 @@ void WorkCollisions(Character& charact, float& x, float& y, float w, float h,
     }
 }
 
-void Attack()
+void HpDelta(float& hp, float atc){ hp -= atc; }
+
+void ProcDamage(Character& chara, Character& obj)
 {
-    if (GetAsyncKeyState(65))
+    for (int i = 0; i < 2; i++)
+    if (CheckCollisions(chara.atcColl[i].x, chara.atcColl[i].y, chara.atcColl[i].width, chara.atcColl[i].height, obj.x, obj.y, obj.width, obj.height))
     {
-        hero.y = -500;
+        HpDelta(chara.hp, obj.atackPower);
     }
 }
 
-void ProcDamage()
+void MeleeAttackHero()
 {
-    if (CheckCollisions)
+    
+    if ((GetAsyncKeyState('A') & 0x8000) && currentTime - lastTime > 1000)
     {
-        
+        lastTime = currentTime;
+        ProcDamage(hero, enemy);
     }
 }
 
@@ -303,21 +334,21 @@ void HeroGravityAndJump() {
     }
 }
 
-//void EnemyGravity()
-//{
-//    if (!enemy.OnGround) {
-//        
-//        enemy.VelocityY = approach(enemy.VelocityY, 1000.0f, GRAVITY);
-//    }
-//    else {
-//        enemy.VelocityY = 0;
-//    }
-//
-//    if ((enemy.OnGround && hero.x > enemy.x)) {
-//        enemy.OnGround = false;
-//        enemy.VelocityY = -50.0f;
-//    }
-//}
+void EnemyGravity()
+{
+    if (!enemy.OnGround) {
+        
+        enemy.VelocityY = approach(enemy.VelocityY, 1000.0f, GRAVITY);
+    }
+    else {
+        enemy.VelocityY = 0;
+    }
+
+    if ((enemy.OnGround && hero.x < enemy.x)) {
+        enemy.OnGround = false;
+        enemy.VelocityY = -50.0f;
+    }
+}
 
 void ShowBitmap(HDC hDC, int x, int y, int x1, int y1, HBITMAP hBitmapBall, bool alpha = false)
 {
@@ -360,10 +391,15 @@ void ShowSprites()
             platform[i].hBitmap);
     }
     
-    ShowBitmap(window.context, enemy.x, enemy.y, enemy.width, enemy.height, enemy.hBitmap);
-
-    ShowBitmap(window.context, hero.x, hero.y, hero.width, hero.height, hero.hBitmap);
-    
+    if (enemy.hp > 1) {
+        ShowBitmap(window.context, enemy.x, enemy.y, enemy.width, enemy.height, enemy.hBitmap);
+    }
+    if (hero.hp > 1) {
+        ShowBitmap(window.context, hero.x, hero.y, hero.width, hero.height, hero.hBitmap);
+    }
+    for(int i = 0; i < 2; i++){
+    ShowBitmap(window.context, hero.atcColl[i].x, hero.atcColl[i].y, hero.atcColl[i].width, hero.atcColl[i].height, hero.atcColl[i].hBitmap);
+    }
 }
 
 
@@ -442,7 +478,10 @@ void ProcessRoom()
     for (int i = 0; i < platform.size(); i++) {
         WorkCollisions(enemy, enemy.x, enemy.y, enemy.width, enemy.height, platform[i].x, platform[i].y, platform[i].width, platform[i].height);
     }
-
+    if (enemy.hp > 1) {
+        WorkCollisions(hero, hero.x, hero.y, hero.width, hero.height, enemy.x, enemy.y, enemy.width, enemy.height);
+    }
+    
 }
 
 
@@ -472,7 +511,7 @@ void ShowScore()
     sprintf_s(debug, "VelocityY: %.1f", hero.VelocityY);
     TextOutA(window.context, 10, 200, debug, strlen(debug));
 
-    sprintf_s(debug, "VelocityY: %.1f", enemy.VelocityY);
+    sprintf_s(debug, "VelocityY: %.1f", currentTime);
     TextOutA(window.context, 10, 400, debug, strlen(debug));
 
     sprintf_s(debug, "OnGround: %s", hero.OnGround ? "YES" : "NO");
@@ -507,10 +546,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     InitWindow();//здесь инициализируем все что нужно для рисования в окне
     InitGame();//здесь инициализируем переменные игры
 
-    ShowCursor(NULL);
+    ShowCursor(true);
     
     while (!GetAsyncKeyState(VK_ESCAPE))
     {
+        currentTime = timeGetTime();
         ShowSprites();//рисуем фон, ракетку и шарик
         ShowScore();
 
@@ -519,9 +559,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         
         ProcessRoom();
         HeroGravityAndJump();
-        //EnemyGravity();
+        EnemyGravity();
         ProcessInput();
-        Attack();
+        MeleeAttackHero();
         WallsCheck();
         EnemyMove();
     }
